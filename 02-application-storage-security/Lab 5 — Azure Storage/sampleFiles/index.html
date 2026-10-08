@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f3f2ec">
+    <meta name="description" content="A hands-on Azure Blob Storage learning lab covering storage fundamentals, a practical upload workflow, and security essentials.">
+    <meta property="og:title" content="Azure Storage, Built Hands-On">
+    <meta property="og:description" content="A practical AZ-900 learning note on Azure Storage, Blob Storage, and security fundamentals.">
+    <title>Azure Storage, Built Hands-On | Cloud Field Notes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: light;
+            --paper: #f3f2ec;
+            --ink: #192725;
+            --muted: #65716d;
+            --line: #d6d9d1;
+            --blue: #1768d2;
+            --lime: #d9ef72;
+            --coral: #ed795d;
+            --mono: "DM Mono", "Courier New", monospace;
+            --sans: "Manrope", "Trebuchet MS", sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background-color: var(--paper);
+            background-image: linear-gradient(rgba(25, 39, 37, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(25, 39, 37, .035) 1px, transparent 1px);
+            background-size: 32px 32px;
+            font-family: var(--sans);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { color: inherit; }
+        .page { width: min(1120px, calc(100% - 64px)); margin: 0 auto; }
+        .topline { display: flex; justify-content: space-between; align-items: center; min-height: 76px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 11px; text-transform: uppercase; }
+        .wordmark { display: flex; align-items: center; gap: 10px; }
+        .wordmark-mark { width: 12px; height: 12px; background: var(--blue); transform: rotate(45deg); }
+        .topline-note { color: var(--muted); }
+        main { padding: 62px 0 72px; }
+        .eyebrow, .section-label, .kicker { color: var(--blue); font-family: var(--mono); font-size: 11px; text-transform: uppercase; }
+        .eyebrow { display: flex; align-items: center; gap: 10px; margin: 0 0 20px; }
+        .eyebrow::before { width: 24px; height: 2px; background: var(--coral); content: ""; }
+        .hero { display: grid; grid-template-columns: 1.1fr .9fr; align-items: end; gap: 52px; margin-bottom: 42px; }
+        h1 { max-width: 700px; margin: 0; font-size: 64px; font-weight: 800; line-height: 1.02; }
+        h1 span { color: var(--blue); }
+        .hero-copy { max-width: 390px; margin: 0 0 4px; color: #43514c; font-size: 16px; line-height: 1.8; }
+        .intro-band { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; padding: 34px 0; border-bottom: 1px solid var(--line); }
+        .intro-band h2, .section-heading h2 { margin: 0; font-size: 30px; line-height: 1.2; }
+        .intro-band p { margin: 0; color: #43514c; font-size: 15px; line-height: 1.8; }
+        .section { padding: 54px 0; border-bottom: 1px solid var(--line); }
+        .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 26px; }
+        .section-label { margin: 0 0 10px; }
+        .section-note { max-width: 390px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+        .service-grid { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+        .service { min-height: 156px; padding: 20px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(255, 255, 255, .38); }
+        .service-number { color: var(--coral); font-family: var(--mono); font-size: 11px; }
+        .service h3 { margin: 15px 0 8px; font-size: 17px; }
+        .service p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+        .workflow { display: grid; grid-template-columns: 240px 1fr; gap: 46px; }
+        .workflow-side { align-self: start; position: sticky; top: 24px; }
+        .workflow-side h2 { margin: 0 0 12px; font-size: 25px; line-height: 1.2; }
+        .workflow-side p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+        .steps { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+        .steps li { position: relative; display: grid; grid-template-columns: 46px 1fr; gap: 18px; padding: 0 0 25px; counter-increment: step; }
+        .steps li:not(:last-child)::after { position: absolute; top: 38px; bottom: 0; left: 17px; width: 1px; background: var(--line); content: ""; }
+        .steps li::before { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--line); background: var(--paper); color: var(--blue); content: counter(step, decimal-leading-zero); font-family: var(--mono); font-size: 10px; }
+        .steps h3 { margin: 0 0 5px; font-size: 15px; }
+        .steps p { margin: 0; color: #56635e; font-size: 13px; line-height: 1.7; }
+        .lab-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 14px; background: var(--ink); color: #fff; }
+        .lab-copy { padding: 32px; }
+        .lab-copy .kicker { margin: 0 0 14px; color: var(--lime); }
+        .lab-copy h3 { margin: 0 0 12px; font-size: 23px; }
+        .lab-copy p { max-width: 440px; margin: 0; color: #c5d0ca; font-size: 13px; line-height: 1.75; }
+        .lab-facts { display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 20px; padding: 30px; border-left: 1px solid rgba(255,255,255,.18); }
+        .fact-label { display: block; margin-bottom: 7px; color: var(--lime); font-family: var(--mono); font-size: 10px; text-transform: uppercase; }
+        .fact-value { font-size: 13px; line-height: 1.5; }
+        .security-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 36px; }
+        .security-item { display: grid; grid-template-columns: 30px 1fr; gap: 13px; padding: 18px 0; border-top: 1px solid var(--line); }
+        .security-mark { display: grid; width: 25px; height: 25px; place-items: center; background: var(--lime); color: var(--ink); font-family: var(--mono); font-size: 12px; }
+        .security-item h3 { margin: 1px 0 6px; font-size: 14px; }
+        .security-item p { margin: 0; color: #56635e; font-size: 12px; line-height: 1.7; }
+        .security-note { margin: 18px 0 0; padding: 16px 18px; border-left: 3px solid var(--coral); background: rgba(255,255,255,.48); color: #43514c; font-size: 12px; line-height: 1.7; }
+        .share { display: grid; grid-template-columns: .8fr 1.2fr; gap: 38px; padding: 36px; background: var(--lime); }
+        .share h2 { margin: 0 0 12px; font-size: 27px; line-height: 1.15; }
+        .share-lead { margin: 0; color: #46513a; font-size: 13px; line-height: 1.7; }
+        .post-text { margin: 0; padding: 20px; border: 1px solid rgba(25,39,37,.2); background: rgba(255,255,255,.52); color: #26332e; font-size: 13px; line-height: 1.8; white-space: pre-line; }
+        .share-actions { display: flex; align-items: center; gap: 14px; margin-top: 14px; }
+        .copy-button { display: inline-flex; align-items: center; gap: 9px; min-height: 42px; padding: 0 15px; border: 0; background: var(--ink); color: #fff; font: 600 12px var(--sans); cursor: pointer; }
+        .copy-button:hover { background: var(--blue); }
+        .copy-button:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+        .copy-status { color: #46513a; font-family: var(--mono); font-size: 10px; }
+        .stack { display: flex; flex-wrap: wrap; gap: 9px; margin: 22px 0 0; padding: 0; list-style: none; }
+        .stack li { padding: 9px 11px; border: 1px solid var(--line); background: rgba(255,255,255,.48); font-size: 11px; font-weight: 700; }
+        .stack li:nth-child(3n + 2) { border-color: #a9c4ee; }
+        .stack li:nth-child(3n) { border-color: #d8c0b5; }
+        footer { display: flex; justify-content: space-between; gap: 18px; padding: 20px 0 28px; color: var(--muted); font-family: var(--mono); font-size: 10px; text-transform: uppercase; }
+
+        @media (max-width: 760px) {
+            .page { width: min(100% - 36px, 560px); }
+            .topline { min-height: 62px; font-size: 9px; }
+            main { padding: 42px 0 50px; }
+            .hero { grid-template-columns: 1fr; gap: 18px; margin-bottom: 28px; }
+            h1 { font-size: 46px; }
+            .hero-copy { font-size: 14px; }
+            .intro-band, .workflow, .share { grid-template-columns: 1fr; gap: 20px; }
+            .intro-band h2, .section-heading h2 { font-size: 26px; }
+            .section { padding: 40px 0; }
+            .section-heading { align-items: start; flex-direction: column; gap: 10px; }
+            .service-grid { grid-template-columns: 1fr 1fr; }
+            .service { min-height: 146px; padding: 16px; }
+            .workflow-side { position: static; }
+            .lab-strip { grid-template-columns: 1fr; }
+            .lab-copy { padding: 26px; }
+            .lab-facts { padding: 24px 26px; border-top: 1px solid rgba(255,255,255,.18); border-left: 0; }
+            .security-grid { grid-template-columns: 1fr; }
+            .share { padding: 25px; }
+            footer { flex-direction: column; gap: 8px; }
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            main { animation: arrive .65s ease-out both; }
+            @keyframes arrive { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="topline">
+            <div class="wordmark"><span class="wordmark-mark" aria-hidden="true"></span><span>Cloud Field Notes</span></div>
+            <span class="topline-note">AZ-900 / Lab 05</span>
+        </header>
+
+        <main>
+            <section class="hero" aria-labelledby="page-title">
+                <div>
+                    <p class="eyebrow">Application, storage &amp; security / hands-on</p>
+                    <h1 id="page-title">Azure Storage,<br><span>built hands-on.</span></h1>
+                </div>
+                <p class="hero-copy">A practical learning note on where Azure stores data, how Blob Storage works, and the security choices that matter when applications depend on it.</p>
+            </section>
+
+            <section class="intro-band" aria-labelledby="why-storage">
+                <h2 id="why-storage">Applications are only as dependable as the data beneath them.</h2>
+                <p>Azure Storage provides durable cloud data services for application files, shared file systems, queues, and structured key-value data. In this lab, I created a StorageV2 account, made a blob container, and uploaded sample application files through the Azure portal.</p>
+            </section>
+
+            <section class="section" aria-labelledby="services-title">
+                <div class="section-heading">
+                    <div><p class="section-label">01 / Choose the right service</p><h2 id="services-title">Four storage types. Different jobs.</h2></div>
+                    <p class="section-note">Start with the data shape and access pattern. The storage service follows from what the application needs to do.</p>
+                </div>
+                <div class="service-grid">
+                    <article class="service"><span class="service-number">01</span><h3>Blob Storage</h3><p>Object storage for unstructured data: documents, images, backups, logs, and media.</p></article>
+                    <article class="service"><span class="service-number">02</span><h3>Azure Files</h3><p>Managed file shares that applications and users can access over familiar file protocols.</p></article>
+                    <article class="service"><span class="service-number">03</span><h3>Queue Storage</h3><p>Simple message queues that help decouple application components and background work.</p></article>
+                    <article class="service"><span class="service-number">04</span><h3>Table Storage</h3><p>A NoSQL key/attribute store for large amounts of structured, non-relational data.</p></article>
+                </div>
+            </section>
+
+            <section class="section workflow" aria-labelledby="workflow-title">
+                <div class="workflow-side">
+                    <p class="section-label">02 / The lab</p>
+                    <h2 id="workflow-title">From account to uploaded object.</h2>
+                    <p>A small portal-based workflow made the storage hierarchy tangible: account, container, then blobs.</p>
+                </div>
+                <div>
+                    <ol class="steps">
+                        <li><div><h3>Create a StorageV2 account</h3><p>Choose a subscription, resource group, region, performance tier, and redundancy option. This lab used Standard performance and locally redundant storage (LRS).</p></div></li>
+                        <li><div><h3>Create a private blob container</h3><p>Containers organize blobs within an account. Keep anonymous access disabled unless public access is an explicit, reviewed requirement.</p></div></li>
+                        <li><div><h3>Upload application files</h3><p>Upload sample files and confirm their names, type, size, and access tier in the portal. This lab includes <code>application.log</code> and <code>sample.txt</code>.</p></div></li>
+                        <li><div><h3>Verify the configuration</h3><p>Review account properties and container settings. Consider access, redundancy, lifecycle, and recovery before storing real application data.</p></div></li>
+                    </ol>
+                    <div class="lab-strip">
+                        <div class="lab-copy"><p class="kicker">What I configured</p><h3>A real Azure Blob Storage workflow</h3><p>This hands-on exercise used the account <code>az900storage2026lab</code> and the container <code>az900-container</code> to explore how Azure organizes blob data.</p></div>
+                        <div class="lab-facts">
+                            <div><span class="fact-label">Account kind</span><span class="fact-value">StorageV2<br>(general purpose v2)</span></div>
+                            <div><span class="fact-label">Performance</span><span class="fact-value">Standard</span></div>
+                            <div><span class="fact-label">Redundancy</span><span class="fact-value">LRS<br>(locally redundant)</span></div>
+                            <div><span class="fact-label">Uploaded blobs</span><span class="fact-value">application.log<br>sample.txt</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section" aria-labelledby="security-title">
+                <div class="section-heading">
+                    <div><p class="section-label">03 / Security fundamentals</p><h2 id="security-title">Storage security is a set of decisions.</h2></div>
+                    <p class="section-note">A storage account is a boundary, not a complete security strategy. Apply least privilege at each access path.</p>
+                </div>
+                <div class="security-grid">
+                    <article class="security-item"><span class="security-mark" aria-hidden="true">01</span><div><h3>Prefer identity-based access</h3><p>Use Microsoft Entra ID and Azure RBAC where supported. Grant only the required data actions and scope access as narrowly as practical.</p></div></article>
+                    <article class="security-item"><span class="security-mark" aria-hidden="true">02</span><div><h3>Protect keys and SAS tokens</h3><p>Account keys provide broad access. Avoid embedding them in applications; rotate when exposed. Use narrowly scoped, short-lived SAS only when needed.</p></div></article>
+                    <article class="security-item"><span class="security-mark" aria-hidden="true">03</span><div><h3>Restrict network exposure</h3><p>Disable public blob access unless required. Use firewall rules, private endpoints, and trusted network paths according to the application design.</p></div></article>
+                    <article class="security-item"><span class="security-mark" aria-hidden="true">04</span><div><h3>Require encrypted transport</h3><p>Require secure transfer and use HTTPS for client connections. Azure Storage encrypts data at rest by default; understand your key-management requirements.</p></div></article>
+                    <article class="security-item"><span class="security-mark" aria-hidden="true">05</span><div><h3>Plan for recovery</h3><p>Choose redundancy based on availability and recovery objectives. Evaluate soft delete, versioning, and backups for accidental deletion or change.</p></div></article>
+                    <article class="security-item"><span class="security-mark" aria-hidden="true">06</span><div><h3>Monitor and minimize data</h3><p>Enable relevant diagnostic logs and alerts. Apply lifecycle policies, retention requirements, and data classification to control risk and cost.</p></div></article>
+                </div>
+                <p class="security-note"><strong>Lab vs. production:</strong> This lab used access-key authentication to learn the portal workflow. For production workloads, evaluate Microsoft Entra ID and scoped Azure RBAC before relying on shared account keys.</p>
+            </section>
+
+            <section class="section" aria-labelledby="concepts-title">
+                <div class="section-heading">
+                    <div><p class="section-label">04 / Key concepts</p><h2 id="concepts-title">The ideas worth carrying forward.</h2></div>
+                    <p class="section-note">A compact recap of the services and security concepts exercised in this storage lab.</p>
+                </div>
+                <ul class="stack" aria-label="Services and concepts covered">
+                    <li>Azure Storage</li><li>Blob Storage</li><li>StorageV2</li><li>Containers &amp; blobs</li><li>Redundancy: LRS</li><li>Identity &amp; access</li><li>Network security</li><li>Data protection</li>
+                </ul>
+            </section>
+
+        
+
+        </main>
+
+        <footer>
+            <span>Learning by building</span>
+            <span>Microsoft Azure / AZ-900 / Lab 05</span>
+        </footer>
+    </div>
+    <script>
+        const copyButton = document.querySelector("#copy-post");
+        const postText = document.querySelector("#linkedin-post");
+        const copyStatus = document.querySelector("#copy-status");
+
+        copyButton.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(postText.innerText);
+                copyStatus.textContent = "Copied to clipboard";
+            } catch {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(postText);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                copyStatus.textContent = "Select and copy the highlighted text";
+            }
+        });
+    </script>
+</body>
+</html>
