@@ -2,7 +2,17 @@
 
 A practical learning repository for Microsoft Azure Fundamentals (AZ-900). It brings together guided labs, architecture diagrams, exam notes, screenshots, and small web application examples covering Azure infrastructure, application hosting, storage, identity, governance, and monitoring.
 
+
 The project is organized as a learning portfolio: read the lab notes, follow the exercises in your own Azure subscription or sandbox, and record your own results. The presence of a guide or diagram in this repository does not by itself mean that the corresponding Azure resource is currently deployed.
+
+## Author
+
+**Sumanth Parashuram**  
+Senior DevOps Engineer
+
+### Microsoft Certified: Azure Fundamentals
+
+![Microsoft Certified: Azure Fundamentals certificate for Sumanth P](Sumanth-Az-900.png)
 
 ## Project At A Glance
 
@@ -177,3 +187,4 @@ Open the local address printed by Flask in your browser. The root `index.html` i
 ## Project Status
 
 This is a learning repository, not an Infrastructure-as-Code deployment package. Lab documents explain concepts and steps; some explicitly note that actions are pending verification or depend on sandbox permissions. Record what you actually completed, and do not publish credentials or claim a live deployment unless you have independently verified it.
+
